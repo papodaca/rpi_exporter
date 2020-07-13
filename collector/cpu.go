@@ -16,6 +16,7 @@ package collector
 import (
 	"bytes"
 	"io/ioutil"
+	"os"
 	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -38,7 +39,11 @@ func NewCPUCollector() (Collector, error) {
 func (c *cpuCollector) Update(ch chan<- prometheus.Metric) error {
 	// Get temperature string from /sys/class/thermal/thermal_zone*/temp and
 	// convert it to float64 value.
-	b, err := ioutil.ReadFile("/sys/class/thermal/thermal_zone0/temp")
+	path := "/sys/class/thermal/thermal_zone0/temp"
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		path = "/sys/virtual/thermal/thermal_zone0/temp"
+	}
+	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
 	}
